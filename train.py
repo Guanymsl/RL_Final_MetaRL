@@ -91,10 +91,12 @@ def create_net(
 
     if net_type == 'policy':
         return StatefulPolicyNet(
+            architecture=architecture,
             preprocessing=preprocessing,
             policy_head=head)
     if net_type == 'value':
         return StatefulValueNet(
+            architecture=architecture,
             preprocessing=preprocessing,
             value_head=head)
     raise NotImplementedError
@@ -137,16 +139,16 @@ def main():
     pol_iters_so_far = 0
     if comm.Get_rank() == ROOT_RANK:
         a = maybe_load_checkpoint(
-            checkpoint_dir=args.checkpoint_dir,
-            model_name=f"{args.model_name}/policy_net",
+            checkpoint_dir='./policy_checkpoints',
+            model_name=f"rl2/policy_net",
             model=policy_net,
             optimizer=policy_optimizer,
             scheduler=policy_scheduler,
             steps=None)
 
         b = maybe_load_checkpoint(
-            checkpoint_dir=args.checkpoint_dir,
-            model_name=f"{args.model_name}/value_net",
+            checkpoint_dir='./value_checkpoints',
+            model_name=f"rl2/value_net",
             model=value_net,
             optimizer=value_optimizer,
             scheduler=value_scheduler,
@@ -173,7 +175,7 @@ def main():
 
     policy_checkpoint_fn = partial(
         save_checkpoint,
-        checkpoint_dir=args.checkpoint_dir,
+        checkpoint_dir='./policy_checkpoints',
         model_name=f"rl2/policy_net",
         model=policy_net,
         optimizer=policy_optimizer,
@@ -181,7 +183,7 @@ def main():
 
     value_checkpoint_fn = partial(
         save_checkpoint,
-        checkpoint_dir=args.checkpoint_dir,
+        checkpoint_dir='./value_checkpoints',
         model_name=f"rl2/value_net",
         model=value_net,
         optimizer=value_optimizer,

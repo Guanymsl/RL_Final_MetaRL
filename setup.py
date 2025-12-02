@@ -5,7 +5,7 @@ setup(
     py_modules=["rl2"],
     version="2.0.0",
     install_requires=[
-        'mpi4py==3.0.3',
-        'torch==1.8.1'
+        'mpi4py',
+        'torch'
     ]
 )
