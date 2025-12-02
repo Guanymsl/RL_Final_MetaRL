@@ -22,7 +22,6 @@ from rl2.algos.common import (
 from rl2.utils.comm_util import sync_grads
 from rl2.utils.constants import ROOT_RANK
 
-
 def compute_losses(
         meta_episodes: List[MetaEpisode],
         policy_net: StatefulPolicyNet,

@@ -1,10 +1,3 @@
-"""
-Utility module for optimization of RL^2 agents.
-"""
-
-import torch as tc
-
-
 def get_weight_decay_param_groups(model, weight_decay):
     decay, no_decay = [], []
     for name, param in model.named_parameters():

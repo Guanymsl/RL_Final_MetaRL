@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="pytorch_rl2_mdp_lstm",
+    name="pytorch_rl2",
     py_modules=["rl2"],
     version="2.0.0",
     install_requires=[

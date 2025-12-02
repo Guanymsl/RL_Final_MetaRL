@@ -16,12 +16,6 @@ This theoretical background of RL^2 is discussed by Ortega et al., 2019 and a co
 ## Getting Started
 
 Install the following system dependencies:
-#### Ubuntu     
-```bash
-sudo apt-get update
-sudo apt-get install -y cmake openmpi-bin openmpi-doc libopenmpi-dev
-```
-
 #### Mac OS X
 Installation of the system packages on Mac requires [Homebrew](https://brew.sh). With Homebrew installed, run the following:
 ```bash
