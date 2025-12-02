@@ -1,7 +1,6 @@
 import argparse
-from functools import partial
-
 import torch as tc
+from functools import partial
 
 from rl2.envs.mdp_env import MDPEnv
 from rl2.agents.preprocessing.tabular import MDPPreprocessing
@@ -158,7 +157,6 @@ def main():
                 "Policy and value iterates not aligned in latest checkpoint!")
         pol_iters_so_far = a
 
-    # sync state.
     pol_iters_so_far = comm.bcast(pol_iters_so_far, root=ROOT_RANK)
     sync_state(
         model=policy_net,
@@ -189,7 +187,6 @@ def main():
         optimizer=value_optimizer,
         scheduler=value_scheduler)
 
-    # run it!
     if args.meta_episodes_per_policy_update == -1:
         numer = 240000
         denom = comm.Get_size() * args.meta_episode_len

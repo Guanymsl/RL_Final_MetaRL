@@ -1,15 +1,9 @@
-"""
-Implements common algorithmic components for training
-stateful meta-reinforcement learning agents.
-"""
-
 import torch as tc
 import numpy as np
 
 from rl2.envs.abstract import MetaEpisodicEnv
 from rl2.agents.integration.policy_net import StatefulPolicyNet
 from rl2.agents.integration.value_net import StatefulValueNet
-
 
 class MetaEpisode:
     def __init__(self, num_timesteps, dummy_obs):
@@ -23,7 +17,6 @@ class MetaEpisode:
         self.advs = np.zeros(self.horizon, 'float32')
         self.tdlam_rets = np.zeros(self.horizon, 'float32')
 
-
 @tc.no_grad()
 def generate_meta_episode(
         env: MetaEpisodicEnv,
@@ -31,21 +24,6 @@ def generate_meta_episode(
         value_net: StatefulValueNet,
         meta_episode_len: int
     ) -> MetaEpisode:
-    """
-    Generates a meta-episode: a sequence of episodes concatenated together,
-    with decisions being made by a recurrent agent with state preserved
-    across episode boundaries.
-
-    Args:
-        env: environment.
-        policy_net: policy network.
-        value_net: value network.
-        meta_episode_len: timesteps per meta-episode.
-
-    Returns:
-        meta_episode: an instance of the meta-episode class.
-    """
-
     env.new_env()
     meta_episode = MetaEpisode(
         num_timesteps=meta_episode_len,
@@ -96,29 +74,12 @@ def generate_meta_episode(
 
     return meta_episode
 
-
 @tc.no_grad()
 def assign_credit(
         meta_episode: MetaEpisode,
         gamma: float,
         lam: float
     ) -> MetaEpisode:
-    """
-    Compute td lambda returns and generalized advantage estimates.
-
-    Note that in the meta-episodic setting of RL^2, the objective is
-    to maximize the expected discounted return of the meta-episode,
-    so we do not utilize the usual 'done' masking in this function.
-
-    Args:
-        meta_episode: meta-episode.
-        gamma: discount factor.
-        lam: GAE decay parameter.
-
-    Returns:
-        meta_episode: an instance of the meta-episode class,
-        with generalized advantage estimates and td lambda returns computed.
-    """
     T = len(meta_episode.acs)
     for t in reversed(range(0, T)):  # T-1, ..., 0.
         r_t = meta_episode.rews[t]
@@ -131,7 +92,6 @@ def assign_credit(
 
     meta_episode.tdlam_rets = meta_episode.vpreds + meta_episode.advs
     return meta_episode
-
 
 def huber_func(y_pred, y_true, delta=1.0):
     a = y_pred-y_true

@@ -1,15 +1,9 @@
-"""
-Implements SNAIL architecture (Mishra et al., 2017) for RL^2.
-"""
-
-from typing import Optional
-
 import torch as tc
 import numpy as np
+from typing import Optional
 
 from rl2.agents.architectures.common.normalization import LayerNorm
 from rl2.agents.architectures.common.attention import MultiheadSelfAttention
-
 
 class CausalConv(tc.nn.Module):
     def __init__(
@@ -47,16 +41,6 @@ class CausalConv(tc.nn.Module):
             inputs: tc.FloatTensor,
             past_inputs: Optional[tc.FloatTensor] = None
     ) -> tc.FloatTensor:
-        """
-        Args:
-            inputs: present input tensor of shape [B, T2, I]
-            past_inputs: optional past input tensor of shape [B, T1, I]
-
-        Returns:
-            Causal convolution of the (padded) present inputs.
-            The present inputs are padded with past inputs (if any),
-            and possibly zero padding.
-        """
         batch_size = inputs.shape[0]
         effective_kernel_size = self.effective_kernel_size
 
@@ -79,7 +63,6 @@ class CausalConv(tc.nn.Module):
 
         conv = self._conv(inputs.permute(0, 2, 1)).permute(0, 2, 1)
         return conv
-
 
 class DenseBlock(tc.nn.Module):
     def __init__(
@@ -120,7 +103,6 @@ class DenseBlock(tc.nn.Module):
         output = tc.cat((inputs, activations), dim=-1)
         return output
 
-
 class TCBlock(tc.nn.Module):
     def __init__(
             self,
@@ -159,14 +141,6 @@ class TCBlock(tc.nn.Module):
         return self.output_dim - self._feature_dim
 
     def forward(self, inputs, past_inputs=None):
-        """
-        Args:
-            inputs: inputs tensor of shape [B, T2, I]
-            past_inputs: optional past inputs tensor of shape [B, T1, I+(L-1)*F]
-
-        Returns:
-            tensor of shape [B, T2, I+L*F]
-        """
         for l in range(0, self.num_layers):  # 0, ..., num_layers-1
             if past_inputs is None:
                 past_inputs_for_layer = None
@@ -177,8 +151,7 @@ class TCBlock(tc.nn.Module):
             inputs = self._dense_blocks[l](
                 inputs=inputs, past_inputs=past_inputs_for_layer)
 
-        return inputs  # [B, T2, I+L*F]
-
+        return inputs
 
 class SNAIL(tc.nn.Module):
     def __init__(self, input_dim, feature_dim, context_size, use_ln=True):
@@ -215,19 +188,6 @@ class SNAIL(tc.nn.Module):
         return None
 
     def forward(self, inputs, prev_state=None):
-        """
-        Run state update, compute features.
-
-        Args:
-            inputs: input vec tensor with shape [B, ..., ?]
-            prev_state: previous architecture state
-
-        Notes:
-            '...' must be either one dimensional or must not exist
-
-        Returns:
-            tuple containing features with shape [B, ..., F], and new_state.
-        """
         assert len(list(inputs.shape)) in [2, 3]
         if len(list(inputs.shape)) == 2:
             inputs = inputs.unsqueeze(1)

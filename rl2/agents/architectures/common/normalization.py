@@ -1,14 +1,6 @@
-"""
-Implements normalization layers for RL^2 agents.
-"""
-
 import torch as tc
 
-
 class LayerNorm(tc.nn.Module):
-    """
-    Layer Normalization.
-    """
     def __init__(self, units):
         super().__init__()
         self._units = units

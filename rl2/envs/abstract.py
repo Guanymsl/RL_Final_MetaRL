@@ -1,5 +1,5 @@
-from typing import Generic, TypeVar, Tuple
 import abc
+from typing import Generic, TypeVar, Tuple
 
 ObsType = TypeVar('ObsType')
 

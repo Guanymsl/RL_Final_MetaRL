@@ -1,11 +1,5 @@
-"""
-Implements attention operations for RL^2 agents
-"""
-
 import functools
-
 import torch as tc
-
 
 @functools.lru_cache
 def sinusoidal_embeddings(src_len, d_model, reverse=False):
@@ -17,14 +11,12 @@ def sinusoidal_embeddings(src_len, d_model, reverse=False):
         pos_emb = tc.flip(pos_emb, dims=(0,))
     return pos_emb
 
-
 @functools.lru_cache
 def get_mask(dest_len, src_len):
     i = tc.arange(dest_len).view(dest_len, 1)
     j = tc.arange(src_len).view(1, src_len)
     m = i >= j - (src_len - dest_len)
     return m.int()
-
 
 def masked_self_attention(qs, ks, vs, use_mask=True):
     scores = tc.bmm(qs, ks.permute(0, 2, 1))
@@ -39,10 +31,7 @@ def masked_self_attention(qs, ks, vs, use_mask=True):
     output = tc.bmm(ws, vs)
     return output
 
-
 def rel_shift(inputs):
-    # inputs should be a 3d tensor with shape [B, T2, T1+T2]
-    # this function implements the part of the shift from Dai et al., Appdx B
     input_shape = inputs.shape
     zp = tc.zeros(size=(input_shape[0], input_shape[1], 1), dtype=tc.float32)
     inputs = tc.cat((zp, inputs), dim=2)
@@ -51,7 +40,6 @@ def rel_shift(inputs):
     inputs = inputs[:, 1:, :]
     inputs = tc.reshape(inputs, input_shape)
     return inputs
-
 
 def relative_masked_self_attention(qs, ks, vs, rs, u_, v_, use_mask=True):
     ac_qs = qs + u_.unsqueeze(1)
@@ -72,7 +60,6 @@ def relative_masked_self_attention(qs, ks, vs, rs, u_, v_, use_mask=True):
     ws = tc.nn.Softmax(dim=-1)(scores)
     output = tc.bmm(ws, vs)
     return output
-
 
 class MultiheadSelfAttention(tc.nn.Module):
     def __init__(
@@ -134,7 +121,7 @@ class MultiheadSelfAttention(tc.nn.Module):
                 assert len(qs) == 1
                 row_idx = (len(ks)-1) // self._row_len
                 row_flat_idx = row_idx * self._row_len
-                ks = ks[row_flat_idx:]  # get relevant row
+                ks = ks[row_flat_idx:]
                 vs = vs[row_flat_idx:]
                 qs = tc.stack(qs, dim=1)
                 ks = tc.stack(ks, dim=1)
@@ -247,14 +234,6 @@ class MultiheadSelfAttention(tc.nn.Module):
         return tc.cat(tc.chunk(inputs, self._num_heads, dim=0), dim=-1)
 
     def forward(self, inputs, past_kvs=None):
-        """
-        Args:
-            inputs: present input tensor with shape [B, T2, I]
-            past_kvs: optional past kvs
-
-        Returns:
-            output tensor and new kvs
-        """
         assert inputs.shape[-1] == self._input_dim
         sampling = (inputs.shape[1] == 1)
         use_mask = (self._attention_style != 'previous_row')
@@ -263,7 +242,6 @@ class MultiheadSelfAttention(tc.nn.Module):
         qs, ks, vs = tc.chunk(qkv, 3, dim=-1)
 
         if sampling:
-            # unbind for memory-efficient append op
             qs, ks, vs = map(lambda x: [x.squeeze(1)], [qs, ks, vs])
             if past_kvs is not None:
                 past_ks, past_vs = past_kvs
@@ -279,32 +257,32 @@ class MultiheadSelfAttention(tc.nn.Module):
                 vs = tc.cat((past_vs, vs), dim=1)
             new_kvs = (ks, vs)
 
-        qs, ks, vs, bsp = self.attn_preop(qs, ks, vs, sampling)  # [B', ..., H*F]
-        qs, ks, vs = map(self.split_heads, [qs, ks, vs])         # [B'*H, ..., F]
+        qs, ks, vs, bsp = self.attn_preop(qs, ks, vs, sampling)
+        qs, ks, vs = map(self.split_heads, [qs, ks, vs])
 
         if self._position_encoding_style == 'rel':
             batch_size, src_len, d_model = bsp, ks.shape[1], inputs.shape[-1]
             max_len = src_len
             if self._attention_style == 'previous_row':
                 max_len += qs.shape[1]
-            r_mat = sinusoidal_embeddings(max_len, d_model, reverse=True)  # [M, I]
-            rs = self._r_linear(r_mat)                                     # [M, H*F]
+            r_mat = sinusoidal_embeddings(max_len, d_model, reverse=True)
+            rs = self._r_linear(r_mat)
 
-            rs = tc.tile(rs.unsqueeze(0), [batch_size, 1, 1])    # [B', M, H*F]
-            u_ = tc.tile(self._u.unsqueeze(0), [batch_size, 1])  # [B', H*F]
-            v_ = tc.tile(self._v.unsqueeze(0), [batch_size, 1])  # [B', H*F]
-            rs, u_, v_ = map(self.split_heads, [rs, u_, v_])     # [B'*H, ..., F]
+            rs = tc.tile(rs.unsqueeze(0), [batch_size, 1, 1])
+            u_ = tc.tile(self._u.unsqueeze(0), [batch_size, 1])
+            v_ = tc.tile(self._v.unsqueeze(0), [batch_size, 1])
+            rs, u_, v_ = map(self.split_heads, [rs, u_, v_])
 
             attn_output = relative_masked_self_attention(
-                qs, ks, vs, rs, u_, v_, use_mask=use_mask)   # [B'*H, T2', F]
+                qs, ks, vs, rs, u_, v_, use_mask=use_mask)
         else:
             attn_output = masked_self_attention(
-                qs, ks, vs, use_mask=use_mask)              # [B'*H, T2', F]
+                qs, ks, vs, use_mask=use_mask)
 
-        attn_output = self.merge_heads(attn_output)  # [B', T2', H*F]
+        attn_output = self.merge_heads(attn_output)
         attn_output = self.attn_postop(
             attn_output,
             input_len=inputs.shape[1],
-            sampling=sampling)  # [B, T2, H*F]
+            sampling=sampling)
 
         return attn_output, new_kvs

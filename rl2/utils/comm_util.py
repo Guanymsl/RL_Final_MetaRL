@@ -1,10 +1,6 @@
-"""
-Utility module for synchronizing state across processes.
-"""
-
-from mpi4py import MPI
 import torch as tc
 import numpy as np
+from mpi4py import MPI
 
 def get_comm():
     comm = MPI.COMM_WORLD
@@ -21,7 +17,6 @@ def sync_state(model, optimizer, scheduler, comm, root):
     optimizer.load_state_dict(optimizer_state_dict)
     if scheduler is not None:
         scheduler.load_state_dict(scheduler_state_dict)
-
 
 @tc.no_grad()
 def sync_grads(model, comm):

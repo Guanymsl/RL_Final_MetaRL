@@ -1,9 +1,7 @@
+import numpy as np
 from typing import Tuple
 
-import numpy as np
-
 from rl2.envs.abstract import MetaEpisodicEnv
-
 
 class MDPEnv(MetaEpisodicEnv):
     def __init__(self, num_states, num_actions, max_episode_length=10):

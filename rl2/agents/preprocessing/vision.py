@@ -1,18 +1,9 @@
-"""
-Implements preprocessing for vision-based MDPs/POMDPs.
-"""
-
 import abc
-
 import torch as tc
 
 from rl2.agents.preprocessing.common import one_hot, Preprocessing
 
-
 class VisionNet(abc.ABC, tc.nn.Module):
-    """
-    Vision network abstract class.
-    """
     @property
     @abc.abstractmethod
     def output_dim(self) -> int:
@@ -20,17 +11,7 @@ class VisionNet(abc.ABC, tc.nn.Module):
 
     @abc.abstractmethod
     def forward(self, curr_obs: tc.FloatTensor) -> tc.FloatTensor:
-        """
-        Embeds visual observations into feature vectors.
-
-        Args:
-            curr_obs: tc.FloatTensor of shape [B, C, H, W]
-
-        Returns:
-            a tc.FloatTensor of shape [B, F]
-        """
         pass
-
 
 class MDPPreprocessing(Preprocessing):
     def __init__(self, num_actions: int, vision_net: VisionNet):
@@ -49,19 +30,6 @@ class MDPPreprocessing(Preprocessing):
         prev_reward: tc.FloatTensor,
         prev_done: tc.FloatTensor
     ) -> tc.FloatTensor:
-        """
-        Creates an input vector for a meta-learning agent.
-
-        Args:
-            curr_obs: tc.FloatTensor of shape [B, ..., C, H, W]
-            prev_action: tc.LongTensor of shape [B, ...]
-            prev_reward: tc.FloatTensor of shape [B, ...]
-            prev_done: tc.FloatTensor of shape [B, ...]
-
-        Returns:
-            tc.FloatTensor of shape [B, ..., F+A+2]
-        """
-
         curr_obs_shape = list(curr_obs.shape)
         curr_obs = curr_obs.view(-1, *curr_obs_shape[-3:])
         emb_o = self._vision_net(curr_obs)
