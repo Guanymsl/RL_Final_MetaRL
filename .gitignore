@@ -1,4 +1,3 @@
 **/.DS_Store
 venv/
-pytorch_*/
 __pycache__/
