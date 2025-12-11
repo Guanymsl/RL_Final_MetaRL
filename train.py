@@ -1,6 +1,4 @@
-from environment.env import HoldemTwoPlayerEnv
 from environment.wrapper import RL2Wrapper
-
 from agent.meta.ppo import RL2PPO
 
 def makeEnv():
@@ -12,7 +10,7 @@ def main():
 
     model = RL2PPO(env)
     model.learn(total_timesteps=500_000)
-    model.save("rl2_lstm_ppo_holdem")
+    model.save("metaholdem")
 
 if __name__ == "__main__":
     main()

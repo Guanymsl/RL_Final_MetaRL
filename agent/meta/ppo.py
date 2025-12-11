@@ -1,4 +1,5 @@
 from stable_baselines3 import PPO
+
 from lstm import RL2LstmPolicy
 
 class RL2PPO(PPO):
@@ -19,3 +20,8 @@ class RL2PPO(PPO):
 
     def reset_policy_state(self):
         self.policy.reset_lstm()
+
+    def collect_rollouts(self, env, callback, rollout_buffer, n_steps):
+        if hasattr(env, "is_task_reset") and env.is_task_reset:
+            self.policy.reset_lstm()
+        return super().collect_rollouts(env, callback, rollout_buffer, n_steps)

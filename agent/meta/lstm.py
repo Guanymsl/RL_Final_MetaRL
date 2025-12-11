@@ -1,17 +1,16 @@
 import torch
 import torch.nn as nn
+
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.common.policies import ActorCriticPolicy
 
 class RL2FeatureExtractor(BaseFeaturesExtractor):
     def __init__(self, observation_space, features_dim):
         super().__init__(observation_space, features_dim)
+        self._features_dim = observation_space.shape[0]
 
-        self.obs_dim = observation_space.shape[0]
-        self._features_dim = self.obs_dim
-
-    def forward(self, observations: torch.Tensor) -> torch.Tensor:
-        return observations
+    def forward(self, obs):
+        return obs
 
 class RL2LstmPolicy(ActorCriticPolicy):
     def __init__(
@@ -33,7 +32,6 @@ class RL2LstmPolicy(ActorCriticPolicy):
             **kwargs,
         )
 
-        # LSTM
         self.lstm = nn.LSTM(
             input_size=self.features_dim,
             hidden_size=lstm_hidden_size,
@@ -45,46 +43,44 @@ class RL2LstmPolicy(ActorCriticPolicy):
 
         self.lstm_state = None
 
-        self._initialize_weights()
-
-    def reset_lstm(self, batch_size=1):
-        h = torch.zeros(1, batch_size, self.lstm_hidden_size).to(self.device)
-        c = torch.zeros(1, batch_size, self.lstm_hidden_size).to(self.device)
+    def reset_lstm(self, n_envs=1):
+        h = torch.zeros(1, n_envs, self.lstm_hidden_size).to(self.device)
+        c = torch.zeros(1, n_envs, self.lstm_hidden_size).to(self.device)
         self.lstm_state = (h, c)
 
-    def extract_features(self, obs):
+    def _prepare_lstm_input(self, obs):
+        if obs.dim() == 2:
+            return obs.unsqueeze(1)
         return obs
 
     def forward(self, obs, deterministic=False):
+        obs = self._prepare_lstm_input(obs)
+
         lstm_out, self.lstm_state = self.lstm(obs, self.lstm_state)
+        last = lstm_out[:, -1, :]
 
-        last_out = lstm_out[:, -1, :]
+        logits = self.actor(last)
+        values = self.critic(last)
+        dist = self._get_action_dist_from_logits(logits)
 
-        logits = self.actor(last_out)
-        values = self.critic(last_out)
-
-        distribution = self._get_action_dist_from_logits(logits)
-
-        if deterministic:
-            actions = distribution.get_actions(deterministic=True)
-        else:
-            actions = distribution.get_actions()
-
-        log_probs = distribution.log_prob(actions)
+        actions = dist.get_actions(deterministic=deterministic)
+        log_probs = dist.log_prob(actions)
 
         return actions, values, log_probs
 
     def get_distribution(self, obs):
+        obs = self._prepare_lstm_input(obs)
         lstm_out, _ = self.lstm(obs, self.lstm_state)
         last = lstm_out[:, -1, :]
         logits = self.actor(last)
         return self._get_action_dist_from_logits(logits)
 
     def forward_actor(self, obs):
-        dist = self.get_distribution(obs)
-        return dist.distribution
+        obs = self._prepare_lstm_input(obs)
+        return self.get_distribution(obs).distribution
 
     def forward_critic(self, obs):
+        obs = self._prepare_lstm_input(obs)
         lstm_out, _ = self.lstm(obs, self.lstm_state)
         last = lstm_out[:, -1, :]
         return self.critic(last)
