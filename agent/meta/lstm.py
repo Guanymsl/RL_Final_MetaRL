@@ -7,7 +7,7 @@ from stable_baselines3.common.policies import ActorCriticPolicy
 class RL2FeatureExtractor(BaseFeaturesExtractor):
     def __init__(self, observation_space, features_dim):
         super().__init__(observation_space, features_dim)
-        self._features_dim = observation_space.shape[0]
+        self._features_dim = features_dim
 
     def forward(self, obs):
         return obs
@@ -41,12 +41,26 @@ class RL2LstmPolicy(ActorCriticPolicy):
         self.actor = nn.Linear(lstm_hidden_size, self.action_space.n)
         self.critic = nn.Linear(lstm_hidden_size, 1)
 
-        self.lstm_state = None
+        self.lstm_states = None
+        self.init_lstm()
 
-    def reset_lstm(self, n_envs=1):
-        h = torch.zeros(1, n_envs, self.lstm_hidden_size).to(self.device)
-        c = torch.zeros(1, n_envs, self.lstm_hidden_size).to(self.device)
-        self.lstm_state = (h, c)
+    def init_lstm(self):
+        h = torch.zeros(1, 1, self.lstm_hidden_size, device=self.device)
+        c = torch.zeros(1, 1, self.lstm_hidden_size, device=self.device)
+        self.lstm_states = (h, c)
+
+    def ensure_lstm_state(self, batch):
+        h, c = self.lstm_states
+        if h.size(1) != batch:
+            self.lstm_states = (
+                torch.zeros(1, batch, self.lstm_hidden_size, device=self.device),
+                torch.zeros(1, batch, self.lstm_hidden_size, device=self.device)
+            )
+
+    def reset_lstm(self, env_idx):
+        h, c = self.lstm_states
+        h[:, env_idx, :] = 0.0
+        c[:, env_idx, :] = 0.0
 
     def _prepare_lstm_input(self, obs):
         if obs.dim() == 2:
@@ -55,8 +69,9 @@ class RL2LstmPolicy(ActorCriticPolicy):
 
     def forward(self, obs, deterministic=False):
         obs = self._prepare_lstm_input(obs)
+        self.ensure_lstm_state(obs.size(0))
 
-        lstm_out, self.lstm_state = self.lstm(obs, self.lstm_state)
+        lstm_out, self.lstm_states = self.lstm(obs, self.lstm_states)
         last = lstm_out[:, -1, :]
 
         logits = self.actor(last)
@@ -70,17 +85,17 @@ class RL2LstmPolicy(ActorCriticPolicy):
 
     def get_distribution(self, obs):
         obs = self._prepare_lstm_input(obs)
-        lstm_out, _ = self.lstm(obs, self.lstm_state)
+        self.ensure_lstm_state(obs.size(0))
+
+        lstm_out, _ = self.lstm(obs, self.lstm_states)
         last = lstm_out[:, -1, :]
         logits = self.actor(last)
         return self._get_action_dist_from_logits(logits)
 
-    def forward_actor(self, obs):
-        obs = self._prepare_lstm_input(obs)
-        return self.get_distribution(obs).distribution
-
     def forward_critic(self, obs):
         obs = self._prepare_lstm_input(obs)
-        lstm_out, _ = self.lstm(obs, self.lstm_state)
+        self.ensure_lstm_state(obs.size(0))
+
+        lstm_out, _ = self.lstm(obs, self.lstm_states)
         last = lstm_out[:, -1, :]
         return self.critic(last)

@@ -22,6 +22,9 @@ class RL2PPO(PPO):
         self.policy.reset_lstm()
 
     def collect_rollouts(self, env, callback, rollout_buffer, n_steps):
-        if hasattr(env, "is_task_reset") and env.is_task_reset:
-            self.policy.reset_lstm()
+        if hasattr(env, "envs"):
+            for idx, subenv in enumerate(env.envs):
+                if hasattr(subenv, "is_task_reset") and subenv.is_task_reset:
+                    self.policy.reset_lstm(env_idx=idx)
+
         return super().collect_rollouts(env, callback, rollout_buffer, n_steps)

@@ -24,6 +24,7 @@ class RL2Wrapper(gym.Env):
     def resetTask(self):
         self.episode = 0
         self.is_task_reset = True
+
         self.env = HoldemTwoPlayerEnv(opponent_agent=self.task.sample())
         obs = self.env.reset()
         return self.augment(obs)
@@ -34,6 +35,7 @@ class RL2Wrapper(gym.Env):
 
         self.episode += 1
         self.is_task_reset = False
+
         obs = self.env.reset()
         return self.augment(obs)
 
