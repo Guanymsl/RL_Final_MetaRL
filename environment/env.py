@@ -3,6 +3,8 @@ import rlcard
 import gym
 from gym import spaces
 
+from preprocess.preproc import GameStateToTensor
+
 class HoldemTwoPlayerEnv(gym.Env):
     metadata = {"render.modes": []}
 
@@ -23,6 +25,12 @@ class HoldemTwoPlayerEnv(gym.Env):
         )
         self.action_space = spaces.Discrete(self.action_dim)
 
+        self.preprocessor = GameStateToTensor(
+            latent_card_dim=128,
+            latent_action_dim=128,
+            stack_dim=3
+        )
+
         self.current_player = None
 
     def reset(self):
@@ -34,7 +42,7 @@ class HoldemTwoPlayerEnv(gym.Env):
                 self.opponent.act(state)
             )
 
-        return state["obs"].astype(np.float32)
+        return self.preprocessor.encode(state["obs"].astype(np.float32))
 
     def step(self, action):
         state, next_player = self.env.step(action)
@@ -57,5 +65,5 @@ class HoldemTwoPlayerEnv(gym.Env):
             obs = np.zeros(self.observation_space.shape, dtype=np.float32)
             return obs, reward, True, {}
 
-        obs = state["obs"].astype(np.float32)
+        obs = self.preprocessor.encode(state["obs"].astype(np.float32))
         return obs, 0.0, False, {}

@@ -19,23 +19,23 @@ class CardTensorFormatter:
             '10': 8, 'Jack': 9, 'Queen': 10, 'King': 11, 'Ace': 12
         }
 
-    def card_to_matrix(self, card):
+    def cardToMatrix(self, card):
         matrix = torch.zeros((4, 13), dtype=torch.float32)
         suit_idx = self.suit_to_index[card.suit]
         rank_idx = self.rank_to_index[card.rank]
         matrix[suit_idx, rank_idx] = 1
         return matrix
 
-    def cards_to_tensor(self, hole_cards, community_cards):
+    def cardToTensor(self, hole_cards, community_cards):
         tensor = torch.zeros((6, 4, 13), dtype=torch.float32)
 
         # Channel 0: Agent's 2 hole cards
         for card in hole_cards:
-            tensor[0] += self.card_to_matrix(card)
+            tensor[0] += self.cardToMatrix(card)
 
         # Channel 1: Flop cards
         for card in community_cards["Flop"]:
-            tensor[1] += self.card_to_matrix(card)
+            tensor[1] += self.cardToMatrix(card)
 
         # Channel 2: Turn card
         tensor[2] += self.card_to_matrix(community_cards["Turn"][0])

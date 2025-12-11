@@ -2,3 +2,5 @@ numpy
 torch
 gym
 rlcard
+stable-baselines3
+sb3-contrib

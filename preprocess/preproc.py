@@ -4,12 +4,12 @@ import torch
 from preprocess.formatter import CardTensorFormatter
 from preprocess.autoencoder import CardAutoEncoder, ActionAutoEncoder
 
-def load_card_autoencoder(hidden_dim=128, ckpt_path="models/card_ae.pth"):
+def loadCardAutoencoder(hidden_dim=128, ckpt_path="models/card_ae.pth"):
     ae = CardAutoEncoder(hidden_dim=hidden_dim)
     ae.load_state_dict(torch.load(ckpt_path, map_location="cpu"))
     return ae
 
-def load_action_autoencoder(hidden_dim=128, ckpt_path="models/action_ae.pth"):
+def loadActionAutoencoder(hidden_dim=128, ckpt_path="models/action_ae.pth"):
     ae = ActionAutoEncoder(hidden_dim=hidden_dim)
     ae.load_state_dict(torch.load(ckpt_path, map_location="cpu"))
     return ae
@@ -23,11 +23,11 @@ class GameStateToTensor:
     ):
         self.card_formatter = CardTensorFormatter()
 
-        self.card_encoder = load_card_autoencoder(
+        self.card_encoder = loadCardAutoencoder(
             hidden_dim=latent_card_dim,
             ckpt_path="models/card_ae.pth"
         ).eval()
-        self.action_encoder = load_action_autoencoder(
+        self.action_encoder = loadActionAutoencoder(
             hidden_dim=latent_action_dim,
             ckpt_path="models/action_ae.pth"
         ).eval()
@@ -42,21 +42,21 @@ class GameStateToTensor:
 
         self.total_dim = latent_card_dim + latent_action_dim + stack_dim
 
-    def extract_card_tensor(self, obs):
+    def extractCardTensor(self, obs):
         raise NotImplementedError
-        return self.card_formatter.cards_to_tensor(
+        return self.card_formatter.cardToTensor(
             obs["hole_cards"],
             obs["community_cards"]
         )
 
-    def extract_action_tensor(self, obs):
+    def extractActionTensor(self, obs):
         raise NotImplementedError
         m = obs["num_action_types"]
         rounds = 4
         channels = rounds * 4
         return torch.zeros((channels, 4, m), dtype=torch.float32)
 
-    def extract_stack_vector(self, obs):
+    def extractStackVector(self, obs):
         raise NotImplementedError
         pot = obs["pot"]
         stacks = obs["player_stacks"]
@@ -65,9 +65,9 @@ class GameStateToTensor:
         return vec
 
     def encode(self, obs):
-        card_tensor = self.extract_card_tensor(obs)
-        action_tensor = self.extract_action_tensor(obs)
-        stack_vec = self.extract_stack_vector(obs)
+        card_tensor = self.extractCardTensor(obs)
+        action_tensor = self.extractActionTensor(obs)
+        stack_vec = self.extractStackVector(obs)
 
         with torch.no_grad():
             latent_card = (
