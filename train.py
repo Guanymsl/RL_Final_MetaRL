@@ -10,7 +10,7 @@ def main():
     env = makeVecEnv()
     model = RL2PPO(env)
     model.learn(total_timesteps=500_000)
-    model.save("metaholdem")
+    model.save("models/metaholdem")
 
 if __name__ == "__main__":
     main()

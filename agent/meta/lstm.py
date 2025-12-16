@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.common.policies import ActorCriticPolicy
+from environment.param import LSTM_LATENT_DIM
 
 class RL2FeatureExtractor(BaseFeaturesExtractor):
     def __init__(self, observation_space, features_dim):
@@ -18,7 +19,7 @@ class RL2LstmPolicy(ActorCriticPolicy):
         observation_space,
         action_space,
         lr_schedule,
-        lstm_hidden_size=128,
+        lstm_hidden_size=LSTM_LATENT_DIM,
         **kwargs
     ):
         self.lstm_hidden_size = lstm_hidden_size
@@ -44,18 +45,15 @@ class RL2LstmPolicy(ActorCriticPolicy):
         self.lstm_states = None
         self.init_lstm()
 
-    def init_lstm(self):
-        h = torch.zeros(1, 1, self.lstm_hidden_size, device=self.device)
-        c = torch.zeros(1, 1, self.lstm_hidden_size, device=self.device)
+    def init_lstm(self, batch=1):
+        h = torch.zeros(1, batch, self.lstm_hidden_size, device=self.device)
+        c = torch.zeros(1, batch, self.lstm_hidden_size, device=self.device)
         self.lstm_states = (h, c)
 
     def ensure_lstm_state(self, batch):
         h, c = self.lstm_states
         if h.size(1) != batch:
-            self.lstm_states = (
-                torch.zeros(1, batch, self.lstm_hidden_size, device=self.device),
-                torch.zeros(1, batch, self.lstm_hidden_size, device=self.device)
-            )
+            self.init_lstm(batch)
 
     def reset_lstm(self, env_idx):
         h, c = self.lstm_states
@@ -74,12 +72,14 @@ class RL2LstmPolicy(ActorCriticPolicy):
         lstm_out, self.lstm_states = self.lstm(obs, self.lstm_states)
         last = lstm_out[:, -1, :]
 
-        logits = self.actor(last)
-        values = self.critic(last)
-        dist = self._get_action_dist_from_logits(logits)
+        latent_pi = last
+        latent_vf = last
 
-        actions = dist.get_actions(deterministic=deterministic)
-        log_probs = dist.log_prob(actions)
+        distribution = self._get_action_dist_from_latent(latent_pi)
+        actions = distribution.get_actions(deterministic=deterministic)
+        log_probs = distribution.log_prob(actions)
+
+        values = self.value_net(latent_vf)
 
         return actions, values, log_probs
 
@@ -89,8 +89,7 @@ class RL2LstmPolicy(ActorCriticPolicy):
 
         lstm_out, _ = self.lstm(obs, self.lstm_states)
         last = lstm_out[:, -1, :]
-        logits = self.actor(last)
-        return self._get_action_dist_from_logits(logits)
+        return self._get_action_dist_from_latent(last)
 
     def forward_critic(self, obs):
         obs = self._prepare_lstm_input(obs)
@@ -98,4 +97,4 @@ class RL2LstmPolicy(ActorCriticPolicy):
 
         lstm_out, _ = self.lstm(obs, self.lstm_states)
         last = lstm_out[:, -1, :]
-        return self.critic(last)
+        return self.value_net(last)

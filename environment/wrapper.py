@@ -3,6 +3,7 @@ import gym
 
 from environment.env import HoldemTwoPlayerEnv
 from agent.interface import OpponentSampler
+from environment.param import AE_LATENT_DIM
 
 class RL2Wrapper(gym.Env):
     def __init__(self, episodes_per_task=5):
@@ -16,7 +17,7 @@ class RL2Wrapper(gym.Env):
         self.observation_space = gym.spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(self.env.observation_space.shape[0] + 1,),
+            shape=(AE_LATENT_DIM + 1,),
             dtype=np.float32
         )
         self.action_space = self.env.action_space

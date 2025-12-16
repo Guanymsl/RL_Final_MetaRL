@@ -4,6 +4,7 @@ import gym
 from gym import spaces
 
 from preprocess.preproc import GameStateToTensor
+from environment.param import AE_LATENT_DIM
 
 class HoldemTwoPlayerEnv(gym.Env):
     metadata = {"render.modes": []}
@@ -17,19 +18,18 @@ class HoldemTwoPlayerEnv(gym.Env):
 
         self.opponent = opponent_agent
 
-        obs_dim = self.env.state_shape["obs"][0]
-        self.action_dim = self.env.action_num
+        obs_dim = self.env.state_shape[0]
+        if isinstance(obs_dim, list):
+            obs_dim = obs_dim[0]
+
+        self.action_dim = 4
 
         self.observation_space = spaces.Box(
             low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32
         )
         self.action_space = spaces.Discrete(self.action_dim)
 
-        self.preprocessor = GameStateToTensor(
-            latent_card_dim=128,
-            latent_action_dim=128,
-            stack_dim=3
-        )
+        self.preprocessor = GameStateToTensor(latent_dim=AE_LATENT_DIM)
 
         self.current_player = None
 
@@ -39,7 +39,7 @@ class HoldemTwoPlayerEnv(gym.Env):
 
         while self.current_player == 1 and not self.env.is_over():
             state, self.current_player = self.env.step(
-                self.opponent.act(state)
+                self.opponent.step(state)
             )
 
         return self.preprocessor.encode(state["obs"].astype(np.float32))
@@ -56,7 +56,7 @@ class HoldemTwoPlayerEnv(gym.Env):
 
         while self.current_player == 1 and not self.env.is_over():
             state, self.current_player = self.env.step(
-                self.opponent.act(state)
+                self.opponent.step(state)
             )
 
         if self.env.is_over():

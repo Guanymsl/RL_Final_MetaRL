@@ -1,6 +1,7 @@
 from stable_baselines3 import PPO
 
-from lstm import RL2LstmPolicy
+from agent.meta.lstm import RL2LstmPolicy
+from environment.param import LSTM_LATENT_DIM
 
 class RL2PPO(PPO):
     def __init__(self, env, **kwargs):
@@ -14,17 +15,17 @@ class RL2PPO(PPO):
             gamma=0.99,
             gae_lambda=0.95,
             learning_rate=3e-4,
-            policy_kwargs=dict(lstm_hidden_size=128),
+            policy_kwargs=dict(lstm_hidden_size=LSTM_LATENT_DIM),
             **kwargs
         )
 
     def reset_policy_state(self):
         self.policy.reset_lstm()
 
-    def collect_rollouts(self, env, callback, rollout_buffer, n_steps):
+    def collect_rollouts(self, env, callback, rollout_buffer, n_rollout_steps):
         if hasattr(env, "envs"):
             for idx, subenv in enumerate(env.envs):
                 if hasattr(subenv, "is_task_reset") and subenv.is_task_reset:
                     self.policy.reset_lstm(env_idx=idx)
 
-        return super().collect_rollouts(env, callback, rollout_buffer, n_steps)
+        return super().collect_rollouts(env, callback, rollout_buffer, n_rollout_steps)
