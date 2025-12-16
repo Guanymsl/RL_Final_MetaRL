@@ -1,20 +1,27 @@
 import numpy as np
 
 from agent.cfr.cfr import PPOAgent
+from environment.param import MODE
 
-cfr_1 = PPOAgent(model_path="agent/cfr/models/cfr_agent_1", deterministic=True)
-cfr_2 = PPOAgent(model_path="agent/cfr/models/cfr_agent_1", deterministic=True)
-cfr_3 = PPOAgent(model_path="agent/cfr/models/cfr_agent_1", deterministic=True)
-cfr_4 = PPOAgent(model_path="agent/cfr/models/cfr_agent_1", deterministic=True)
+aggresive = PPOAgent(model_path="agent/cfr/models/aggressive", deterministic=True)
+passive   = PPOAgent(model_path="agent/cfr/models/passive", deterministic=True)
+tight     = PPOAgent(model_path="agent/cfr/models/tight", deterministic=True)
+loose     = PPOAgent(model_path="agent/cfr/models/loose", deterministic=True)
+baseline  = PPOAgent(model_path="agent/cfr/models/baseline", deterministic=True)
 
 class OpponentSampler:
-    def __init__(self):
-        self.opponents = [
-            cfr_1,
-            cfr_2,
-            cfr_3,
-            cfr_4,
-        ]
+    def __init__(self, mode=MODE):
+        if (mode == 0):
+            self.opponents = [
+                aggresive,
+                passive,
+                tight,
+                loose,
+            ]
+        elif (mode == 1):
+            self.opponents = [
+                baseline,
+            ]
 
     def sample(self):
         return np.random.choice(self.opponents)

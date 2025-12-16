@@ -24,7 +24,7 @@ def main():
         policy_kwargs=dict(lstm_hidden_size=LSTM_LATENT_DIM),
     )
 
-    model.learn(total_timesteps=1000_000)
+    model.learn(total_timesteps=10000_000)
     model.save("models/metaholdem")
 
 if __name__ == "__main__":
