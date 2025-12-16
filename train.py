@@ -3,6 +3,7 @@ from agent.meta.ppo import RL2PPO
 
 from stable_baselines3.common.vec_env import DummyVecEnv
 from agent.meta.lstm import RL2LstmPolicy
+from agent.meta.callback import WinRateCallback
 from environment.param import LSTM_LATENT_DIM
 
 def makeVecEnv():
@@ -24,7 +25,10 @@ def main():
         policy_kwargs=dict(lstm_hidden_size=LSTM_LATENT_DIM),
     )
 
-    model.learn(total_timesteps=10000_000)
+    # Create callback to track win rate (log every 1000 episodes per batch)
+    win_rate_callback = WinRateCallback(batch_size=1000, verbose=1)
+    
+    model.learn(total_timesteps=10000_000, callback=win_rate_callback)
     model.save("models/metaholdem")
 
 if __name__ == "__main__":
