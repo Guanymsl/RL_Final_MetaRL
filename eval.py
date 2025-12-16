@@ -47,6 +47,6 @@ def inference(model_path: str, n_episodes: int = 100):
 
 if __name__ == "__main__":
     inference(
-        model_path="metaholdem",
-        n_episodes=200,
+        model_path="models/metaholdem",
+        n_episodes=20000,
     )

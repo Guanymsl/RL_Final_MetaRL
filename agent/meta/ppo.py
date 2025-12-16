@@ -1,23 +1,8 @@
 from stable_baselines3 import PPO
 
-from agent.meta.lstm import RL2LstmPolicy
-from environment.param import LSTM_LATENT_DIM
-
 class RL2PPO(PPO):
-    def __init__(self, env, **kwargs):
-        super().__init__(
-            policy=RL2LstmPolicy,
-            env=env,
-            verbose=1,
-            n_steps=2048,
-            batch_size=64,
-            n_epochs=4,
-            gamma=0.99,
-            gae_lambda=0.95,
-            learning_rate=3e-4,
-            policy_kwargs=dict(lstm_hidden_size=LSTM_LATENT_DIM),
-            **kwargs
-        )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def reset_policy_state(self):
         self.policy.reset_lstm()
