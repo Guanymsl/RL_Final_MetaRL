@@ -54,7 +54,7 @@ def main():
             ])
         )
     except KeyboardInterrupt:
-        model.save("models/metaholdem_interrupt")
+        model.save("models/metaholdem")
         wandb.finish()
         raise
 
