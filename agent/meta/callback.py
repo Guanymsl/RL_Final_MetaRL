@@ -44,7 +44,6 @@ class WinRateCallback(BaseCallback):
         wandb.log({
             "win_rate": batch_win_rate,
             "reward": batch_mean_reward,
-            "task": self.total_tasks,
         })
 
         if self.verbose > 0:

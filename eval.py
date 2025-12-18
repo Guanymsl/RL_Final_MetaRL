@@ -3,7 +3,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from sb3_contrib import RecurrentPPO
 from tqdm import tqdm
 
-from environment.wrapper import RL2Wrapper
+from agent.meta.wrapper import RL2Wrapper
 
 def makeInferEnv(n_episodes):
     return DummyVecEnv([lambda: RL2Wrapper(episodes_per_task=n_episodes, mode='inference')])

@@ -1,7 +1,7 @@
 import torch
 
 from preprocess.autoencoder import AutoEncoder
-from environment.param import AE_LATENT_DIM
+from preprocess.param import AE_LATENT_DIM
 
 def loadAutoencoder(hidden_dim=AE_LATENT_DIM, ckpt_path="preprocess/models/autoencoder.pt"):
     ae = AutoEncoder(hidden_dim=hidden_dim)

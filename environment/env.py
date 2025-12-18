@@ -3,7 +3,7 @@ import rlcard
 import gymnasium as gym
 
 from preprocess.preproc import GameStateToTensor
-from environment.param import AE_LATENT_DIM
+from preprocess.param import AE_LATENT_DIM
 
 class HoldemTwoPlayerEnv(gym.Env):
     metadata = {"render.modes": []}

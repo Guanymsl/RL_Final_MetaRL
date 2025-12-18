@@ -1,5 +1,5 @@
 import torch.nn as nn
-from environment.param import AE_LATENT_DIM
+from preprocess.param import AE_LATENT_DIM
 
 class AutoEncoder(nn.Module):
     def __init__(self, hidden_dim=AE_LATENT_DIM):

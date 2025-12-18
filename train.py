@@ -6,7 +6,7 @@ from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv
 from sb3_contrib import RecurrentPPO
 
-from environment.wrapper import RL2Wrapper
+from agent.meta.wrapper import RL2Wrapper
 from agent.meta.callback import WinRateCallback
 
 def makeVecEnv():

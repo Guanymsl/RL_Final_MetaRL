@@ -3,7 +3,7 @@ import gymnasium as gym
 
 from environment.env import HoldemTwoPlayerEnv
 from agent.interface import OpponentSampler
-from environment.param import AE_LATENT_DIM
+from preprocess.param import AE_LATENT_DIM
 
 class RL2Wrapper(gym.Env):
     def __init__(self, episodes_per_task=10, mode='train'):
