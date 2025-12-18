@@ -3,7 +3,7 @@ import wandb
 from stable_baselines3.common.callbacks import BaseCallback
 
 class WinRateCallback(BaseCallback):
-    def __init__(self, batch_size=1000, verbose=1):
+    def __init__(self, batch_size=100, verbose=1):
         super().__init__(verbose)
 
         self.total_tasks = 0
@@ -42,8 +42,8 @@ class WinRateCallback(BaseCallback):
         batch_mean_reward = float(np.mean(self.batch_rewards))
 
         wandb.log({
-            "win_rate": batch_win_rate,
-            "reward": batch_mean_reward,
+            "Win Rate": batch_win_rate,
+            "Reward": batch_mean_reward,
         })
 
         if self.verbose > 0:
