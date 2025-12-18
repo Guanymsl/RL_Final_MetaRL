@@ -3,7 +3,7 @@ import wandb
 from stable_baselines3.common.callbacks import BaseCallback
 
 class WinRateCallback(BaseCallback):
-    def __init__(self, batch_size=100, verbose=1):
+    def __init__(self, batch_size=1000, verbose=1):
         super().__init__(verbose)
 
         self.total_tasks = 0
@@ -18,10 +18,10 @@ class WinRateCallback(BaseCallback):
         infos = self.locals.get("infos", [])
 
         for info in infos:
-            if "episode" not in info:
+            if not info.get("hand_done", False):
                 continue
 
-            task_reward = info["episode"]["r"]
+            task_reward = info["reward"]
 
             self.total_tasks += 1
             self.task_rewards.append(task_reward)

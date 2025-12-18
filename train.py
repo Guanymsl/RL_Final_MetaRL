@@ -10,7 +10,7 @@ from agent.meta.wrapper import RL2Wrapper
 from agent.meta.callback import WinRateCallback
 
 def makeVecEnv():
-    return DummyVecEnv([lambda: Monitor(RL2Wrapper(episodes_per_task=10, mode='train'))])
+    return DummyVecEnv([lambda: Monitor(RL2Wrapper(episodes_per_task=100, mode='train'))])
 
 def main():
     wandb.init(
@@ -23,15 +23,15 @@ def main():
         policy="MlpLstmPolicy",
         env=env,
         verbose=1,
-        n_steps=2048,
-        batch_size=64,
+        n_steps=4096,
+        batch_size=256,
         n_epochs=4,
         gamma=0.99,
         gae_lambda=0.95,
-        learning_rate=3e-4,
+        learning_rate=1e-4,
         policy_kwargs=dict(
-            shared_lstm=True,
-            enable_critic_lstm=False,
+            shared_lstm=False,
+            enable_critic_lstm=True,
         ),
     )
 
@@ -47,7 +47,7 @@ def main():
     )
 
     model.learn(
-        total_timesteps=1_000_000,
+        total_timesteps=100_000,
         callback=CallbackList([
             win_rate_callback,
             wandb_callback,
