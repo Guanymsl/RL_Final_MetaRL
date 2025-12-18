@@ -3,47 +3,42 @@ import wandb
 from stable_baselines3.common.callbacks import BaseCallback
 
 class WinRateCallback(BaseCallback):
-    def __init__(self, batch_size=1000, verbose=1):
+    def __init__(self, verbose=1):
         super().__init__(verbose)
 
-        self.total_tasks = 0
-        self.task_rewards = []
+        self.episode_rewards = []
+        self.episode_wins = 0
+        self.episode_counts = 0
 
-        self.batch_size = batch_size
-        self.batch_counts = 0
-        self.batch_wins = 0
-        self.batch_rewards = []
+        self.task_counts = 0
 
     def _on_step(self) -> bool:
-        infos = self.locals.get("infos", [])
+        info = self.locals.get("infos", [])
 
-        for info in infos:
-            if not info.get("hand_done", False):
-                continue
+        if not info[0].get("hand_done", False):
+            return True
 
-            task_reward = info["reward"]
+        episode_reward = info[0]["reward"]
+        self.episode_rewards.append(episode_reward)
+        self.episode_counts += 1
 
-            self.total_tasks += 1
-            self.task_rewards.append(task_reward)
+        if episode_reward > 0:
+            self.episode_wins += 1
 
-            self.batch_counts += 1
-            self.batch_rewards.append(task_reward)
-
-            if task_reward > 0:
-                self.batch_wins += 1
-
-            if self.batch_counts >= self.batch_size:
+        if info[0].get("episode", False):
+            self.task_counts += 1
+            if self.task_counts % 10 == 0:
                 self._log_batch()
 
         return True
 
     def _log_batch(self):
-        batch_win_rate = self.batch_wins / self.batch_counts
-        batch_mean_reward = float(np.mean(self.batch_rewards))
+        task_win_rate = self.episode_wins / self.episode_counts
+        task_mean_reward = float(np.mean(self.episode_rewards))
 
         wandb.log({
-            "Win Rate": batch_win_rate,
-            "Reward": batch_mean_reward,
+            "Win Rate": task_win_rate,
+            "Reward": task_mean_reward,
         })
 
         if self.verbose > 0:
@@ -52,12 +47,12 @@ class WinRateCallback(BaseCallback):
                 "\n" + "=" * width + "\n"
                 f"| {'WinRateCallback':^{width-4}} |\n"
                 + "-" * width + "\n"
-                f"| {'Win Rate':<10}| {batch_win_rate:<10.3f}|\n"
-                f"| {'Mean Rwd':<10}| {batch_mean_reward:<10.2f}|\n"
-                f"| {'Tasks':<10}| {self.total_tasks:<10d}|\n"
+                f"| {'Win Rate':<10}| {task_win_rate:<10.3f}|\n"
+                f"| {'Mean Rwd':<10}| {task_mean_reward:<10.2f}|\n"
+                f"| {'Tasks':<10}| {self.task_counts:<10d}|\n"
                 + "=" * width
             )
 
-        self.batch_counts = 0
-        self.batch_wins = 0
-        self.batch_rewards = []
+        self.episode_rewards = []
+        self.episode_wins = 0
+        self.episode_counts = 0

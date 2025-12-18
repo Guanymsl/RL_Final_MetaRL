@@ -36,7 +36,6 @@ def main():
     )
 
     win_rate_callback = WinRateCallback(
-        batch_size=1000,
         verbose=1,
     )
 
@@ -46,15 +45,21 @@ def main():
         verbose=1,
     )
 
-    model.learn(
-        total_timesteps=100_000,
-        callback=CallbackList([
-            win_rate_callback,
-            wandb_callback,
-        ])
-    )
+    try:
+        model.learn(
+            total_timesteps=5_000_000,
+            callback=CallbackList([
+                win_rate_callback,
+                wandb_callback,
+            ])
+        )
+    except KeyboardInterrupt:
+        model.save("models/metaholdem_interrupt")
+        wandb.finish()
+        raise
 
     model.save("models/metaholdem")
+    wandb.finish()
 
 if __name__ == "__main__":
     main()
