@@ -1,7 +1,6 @@
 import numpy as np
 import rlcard
-import gym
-from gym import spaces
+import gymnasium as gym
 
 from preprocess.preproc import GameStateToTensor
 from environment.param import AE_LATENT_DIM
@@ -24,16 +23,21 @@ class HoldemTwoPlayerEnv(gym.Env):
 
         self.action_dim = 4
 
-        self.observation_space = spaces.Box(
-            low=0.0, high=1.0, shape=(obs_dim,), dtype=np.float32
+        self.observation_space = gym.spaces.Box(
+            low=0.0,
+            high=1.0,
+            shape=(obs_dim,),
+            dtype=np.float32,
         )
-        self.action_space = spaces.Discrete(self.action_dim)
+        self.action_space = gym.spaces.Discrete(self.action_dim)
 
         self.preprocessor = GameStateToTensor(latent_dim=AE_LATENT_DIM)
 
         self.current_player = None
 
-    def reset(self):
+    def reset(self, *, seed=None, options=None):
+        super().reset(seed=seed)
+
         state, player = self.env.reset()
         self.current_player = player
 
@@ -51,8 +55,8 @@ class HoldemTwoPlayerEnv(gym.Env):
         if self.env.is_over():
             payoffs = self.env.get_payoffs()
             reward = payoffs[0]
-            obs = np.zeros(self.observation_space.shape, dtype=np.float32)
-            return obs, reward, True, {}
+            obs = np.zeros(AE_LATENT_DIM, dtype=np.float32)
+            return obs, reward, True, False, {}
 
         while self.current_player == 1 and not self.env.is_over():
             state, self.current_player = self.env.step(
@@ -62,8 +66,8 @@ class HoldemTwoPlayerEnv(gym.Env):
         if self.env.is_over():
             payoffs = self.env.get_payoffs()
             reward = payoffs[0]
-            obs = np.zeros(self.observation_space.shape, dtype=np.float32)
-            return obs, reward, True, {}
+            obs = np.zeros(AE_LATENT_DIM, dtype=np.float32)
+            return obs, reward, True, False, {}
 
         obs = self.preprocessor.encode(state["obs"].astype(np.float32))
-        return obs, 0.0, False, {}
+        return obs, 0.0, False, False, {}

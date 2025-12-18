@@ -1,7 +1,9 @@
 numpy
 torch
-gym
+gymnasium
 rlcard
 stable-baselines3
 sb3-contrib
 shimmy
+wandb
+tqdm

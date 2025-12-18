@@ -1,19 +1,26 @@
-from environment.wrapper import RL2Wrapper
-from agent.meta.ppo import RL2PPO
+import wandb
+from wandb.integration.sb3 import WandbCallback
 
+from stable_baselines3.common.callbacks import CallbackList
+from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv
-from agent.meta.lstm import RL2LstmPolicy
+from sb3_contrib import RecurrentPPO
+
+from environment.wrapper import RL2Wrapper
 from agent.meta.callback import WinRateCallback
-from environment.param import LSTM_LATENT_DIM
 
 def makeVecEnv():
-    return DummyVecEnv([lambda: RL2Wrapper(episodes_per_task=5)])
+    return DummyVecEnv([lambda: Monitor(RL2Wrapper(episodes_per_task=10, mode='train'))])
 
 def main():
-    env = makeVecEnv()
+    wandb.init(
+        project="meta-holdem",
+        name="RL2",
+    )
 
-    model = RL2PPO(
-        policy=RL2LstmPolicy,
+    env = makeVecEnv()
+    model = RecurrentPPO(
+        policy="MlpLstmPolicy",
         env=env,
         verbose=1,
         n_steps=2048,
@@ -22,13 +29,31 @@ def main():
         gamma=0.99,
         gae_lambda=0.95,
         learning_rate=3e-4,
-        policy_kwargs=dict(lstm_hidden_size=LSTM_LATENT_DIM),
+        policy_kwargs=dict(
+            shared_lstm=True,
+            enable_critic_lstm=False,
+        ),
     )
 
-    # Create callback to track win rate (log every 1000 episodes per batch)
-    win_rate_callback = WinRateCallback(batch_size=1000, verbose=1)
-    
-    model.learn(total_timesteps=10000_000, callback=win_rate_callback)
+    win_rate_callback = WinRateCallback(
+        batch_size=1000,
+        verbose=1,
+    )
+
+    wandb_callback = WandbCallback(
+        model_save_path="wandb_models/",
+        model_save_freq=100_000,
+        verbose=1,
+    )
+
+    model.learn(
+        total_timesteps=1_000_000,
+        callback=CallbackList([
+            win_rate_callback,
+            wandb_callback,
+        ])
+    )
+
     model.save("models/metaholdem")
 
 if __name__ == "__main__":

@@ -1,7 +1,6 @@
 import numpy as np
 
 from agent.cfr.cfr import PPOAgent
-from environment.param import MODE
 
 aggresive = PPOAgent(model_path="agent/cfr/models/aggressive", deterministic=True)
 passive   = PPOAgent(model_path="agent/cfr/models/passive", deterministic=True)
@@ -10,15 +9,16 @@ loose     = PPOAgent(model_path="agent/cfr/models/loose", deterministic=True)
 baseline  = PPOAgent(model_path="agent/cfr/models/baseline", deterministic=True)
 
 class OpponentSampler:
-    def __init__(self, mode=MODE):
-        if (mode == 0):
+    def __init__(self, mode='train'):
+        if mode == 'train':
             self.opponents = [
                 aggresive,
                 passive,
                 tight,
                 loose,
             ]
-        elif (mode == 1):
+
+        else:
             self.opponents = [
                 baseline,
             ]
