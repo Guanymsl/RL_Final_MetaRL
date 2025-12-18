@@ -35,6 +35,8 @@ class HoldemTwoPlayerEnv(gym.Env):
 
         self.current_player = None
 
+        self.prev_chips = 0.0
+
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
 
@@ -46,11 +48,16 @@ class HoldemTwoPlayerEnv(gym.Env):
                 self.opponent.step(state)
             )
 
+        self.prev_chips = float(state["raw_obs"]["all_chips"][0])
         return self.preprocessor.encode(state["obs"].astype(np.float32))
 
     def step(self, action):
         state, next_player = self.env.step(action)
         self.current_player = next_player
+
+        before = self.prev_chips
+        self.prev_chips = float(state["raw_obs"]["all_chips"][0])
+        reward = 0.1 * (self.prev_chips - before)
 
         if self.env.is_over():
             payoffs = self.env.get_payoffs()
@@ -70,4 +77,4 @@ class HoldemTwoPlayerEnv(gym.Env):
             return obs, reward, True, False, {}
 
         obs = self.preprocessor.encode(state["obs"].astype(np.float32))
-        return obs, 0.0, False, False, {}
+        return obs, reward, False, False, {}

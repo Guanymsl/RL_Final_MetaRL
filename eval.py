@@ -64,8 +64,8 @@ def inference(model_path: str, n_episodes: int = 100):
 
 if __name__ == "__main__":
     episode_rewards, batch_winrates = inference(
-        model_path="models/metaholdem",
-        n_episodes=100_000,
+        model_path="models/best",
+        n_episodes=10_000,
     )
 
     episodes = np.arange(1, len(episode_rewards) + 1)
