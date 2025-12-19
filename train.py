@@ -46,7 +46,7 @@ def main():
 
     try:
         model.learn(
-            total_timesteps=10_000_000,
+            total_timesteps=2_000_000,
             callback=CallbackList([
                 win_rate_callback,
                 wandb_callback,
