@@ -64,7 +64,7 @@ def inference(model_path: str, n_episodes: int = 100):
 
 if __name__ == "__main__":
     episode_rewards, batch_winrates = inference(
-        model_path="models/best",
+        model_path="models/cool",
         n_episodes=10_000,
     )
 

@@ -1,6 +1,5 @@
 import wandb
 from wandb.integration.sb3 import WandbCallback
-
 from stable_baselines3.common.callbacks import CallbackList
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv

@@ -1,6 +1,6 @@
-from stable_baselines3 import PPO
 import numpy as np
 import torch
+from stable_baselines3 import PPO
 
 class PPOAgent:
     def __init__(self, model_path, deterministic=False, device="cpu"):

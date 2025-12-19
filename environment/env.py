@@ -37,6 +37,10 @@ class HoldemTwoPlayerEnv(gym.Env):
 
         self.prev_chips = 0.0
 
+    def _get_obs(self, player):
+        state = self.env.get_state(player)
+        return self.preprocessor.encode(state["obs"].astype(np.float32))
+
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
 
@@ -48,33 +52,41 @@ class HoldemTwoPlayerEnv(gym.Env):
                 self.opponent.step(state)
             )
 
+        self.start_obs = self._get_obs(self.current_player)
         self.prev_chips = float(state["raw_obs"]["all_chips"][0])
-        return self.preprocessor.encode(state["obs"].astype(np.float32))
+
+        return self.start_obs
 
     def step(self, action):
+        if self.env.is_over():
+            reward = self.env.get_payoffs()[0]
+            return self.start_obs, reward, True, False, {}
+
+        state = self.env.get_state(self.current_player)
+        legal_actions = list(state["legal_actions"].keys())
+        if action not in legal_actions:
+            action = int(np.random.choice(legal_actions))
+
         state, next_player = self.env.step(action)
         self.current_player = next_player
+
+        if self.env.is_over():
+            reward = self.env.get_payoffs()[0]
+            return self.preprocessor.encode(state["obs"].astype(np.float32)), reward, True, False, {}
 
         before = self.prev_chips
         self.prev_chips = float(state["raw_obs"]["all_chips"][0])
         reward = 0.1 * (self.prev_chips - before)
-
-        if self.env.is_over():
-            payoffs = self.env.get_payoffs()
-            reward = payoffs[0]
-            obs = np.zeros(AE_LATENT_DIM, dtype=np.float32)
-            return obs, reward, True, False, {}
 
         while self.current_player == 1 and not self.env.is_over():
             state, self.current_player = self.env.step(
                 self.opponent.step(state)
             )
 
+        obs = self._get_obs(self.current_player)
+
         if self.env.is_over():
-            payoffs = self.env.get_payoffs()
-            reward = payoffs[0]
-            obs = np.zeros(AE_LATENT_DIM, dtype=np.float32)
+            reward = self.env.get_payoffs()[0]
             return obs, reward, True, False, {}
 
-        obs = self.preprocessor.encode(state["obs"].astype(np.float32))
         return obs, reward, False, False, {}
