@@ -69,4 +69,4 @@ class OpponentSampler:
         if self.mode == 'train':
             return task_sample()
         else:
-            return fold
+            return baseline
