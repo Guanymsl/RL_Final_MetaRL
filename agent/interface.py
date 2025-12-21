@@ -25,8 +25,6 @@ AGENTS = {
     "call": call,
 }
 
-OPPONENT = baseline
-
 def task_sample():
     r = random.random()
 
@@ -39,11 +37,16 @@ def task_sample():
     return baseline
 
 class OpponentSampler:
-    def __init__(self, mode='train'):
+    def __init__(self, opponent, mode='train'):
         self.mode = mode
+
+        if mode == 'inference':
+            self.opponent = AGENTS[opponent]
+        else:
+            self.opponent = None
 
     def sample(self):
         if self.mode == 'train':
             return task_sample()
         else:
-            return OPPONENT
+            return self.opponent

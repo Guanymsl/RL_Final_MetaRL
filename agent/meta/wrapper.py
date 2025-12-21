@@ -6,10 +6,10 @@ from agent.interface import OpponentSampler
 from preprocess.param import AE_LATENT_DIM
 
 class RL2Wrapper(gym.Env):
-    def __init__(self, episodes_per_task=100, mode='train'):
+    def __init__(self, episodes_per_task=100, opponent='baseline', mode='train'):
         super().__init__()
 
-        self.task = OpponentSampler(mode=mode)
+        self.task = OpponentSampler(opponent=opponent, mode=mode)
         self.episodes_per_task = episodes_per_task
         self.mode = mode
 

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
 from stable_baselines3.common.vec_env import DummyVecEnv
 from sb3_contrib import RecurrentPPO
 from tqdm import tqdm
@@ -7,20 +8,19 @@ from tqdm import tqdm
 from environment.env import EasyTwoPlayerEnv
 from agent.meta.wrapper import RL2Wrapper
 from agent.interface import AGENTS
-from agent.interface import OPPONENT
 
-def makeInferEnv(n_episodes):
-    return DummyVecEnv([lambda: RL2Wrapper(episodes_per_task=n_episodes, mode='inference')])
+def makeInferEnv(n_episodes, opponent):
+    return DummyVecEnv([lambda: RL2Wrapper(episodes_per_task=n_episodes, opponent=opponent, mode='inference')])
 
-def makeEasyEnv(opponent_agent):
-    return EasyTwoPlayerEnv(opponent_agent=opponent_agent)
+def makeEasyEnv(opponent):
+    return EasyTwoPlayerEnv(opponent_agent=opponent)
 
-def inference(model_path='models/2M', n_episodes=10000, agent='agent'):
-    if agent == 'agent':
-        env = makeInferEnv(n_episodes)
+def inference(model_path='models/2M', n_episodes=10000, agent='meta', opponent='baseline'):
+    if agent == 'meta':
+        env = makeInferEnv(n_episodes, opponent)
         model = RecurrentPPO.load(model_path, env=env)
     else:
-        env = makeEasyEnv(OPPONENT)
+        env = makeEasyEnv(AGENTS[opponent])
         model = AGENTS[agent]
 
     episode_rewards = []
@@ -31,7 +31,7 @@ def inference(model_path='models/2M', n_episodes=10000, agent='agent'):
     batch_wins = 0
     batch_draws = 0
 
-    if agent == 'agent':
+    if agent == 'meta':
         obs = env.reset()
         for ep in tqdm(range(n_episodes), desc="Evaluation"):
             ep_reward = 0.0
@@ -138,24 +138,56 @@ def inference(model_path='models/2M', n_episodes=10000, agent='agent'):
 
     return episode_rewards, batch_winrates
 
-if __name__ == "__main__":
-    episode_rewards, batch_winrates = inference(
-        n_episodes=100_000,
-        agent='passive',
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Inference script for RL2 Hold'em agents"
     )
 
-    '''episodes = np.arange(1, len(episode_rewards) + 1)
+    parser.add_argument(
+        "--agent",
+        type=str,
+        default="meta",
+        choices=["meta"] + list(AGENTS.keys()),
+        help="Which agent to evaluate"
+    )
+    parser.add_argument(
+        "--opponent",
+        type=str,
+        default="baseline",
+        choices=list(AGENTS.keys()),
+        help="Which agent as the opponent"
+    )
+    parser.add_argument(
+        "--plot",
+        action="store_true",
+        help="Plot reward and win rate curves"
+    )
 
-    plt.figure(figsize=(6, 4))
-    plt.plot(episodes, episode_rewards, color='orange')
-    plt.xlabel("Episode")
-    plt.ylabel("Reward")
-    plt.title("Reward vs Episode")
+    return parser.parse_args()
 
-    plt.figure(figsize=(6, 4))
-    plt.plot(np.arange(100, len(batch_winrates) * 100 + 1, 100), batch_winrates, color='green')
-    plt.xlabel("Episode")
-    plt.ylabel("Win Rate")
-    plt.title("Win Rate vs Episode")
 
-    plt.show()'''
+if __name__ == "__main__":
+    args = parse_args()
+
+    episode_rewards, batch_winrates = inference(
+        n_episodes=100_000,
+        agent=args.agent,
+        opponent = args.opponent,
+    )
+
+    if args.plot:
+        episodes = np.arange(1, len(episode_rewards) + 1)
+
+        plt.figure(figsize=(6, 4))
+        plt.plot(episodes, episode_rewards, color='orange')
+        plt.xlabel("Episode")
+        plt.ylabel("Reward")
+        plt.title("Reward vs Episode")
+
+        plt.figure(figsize=(6, 4))
+        plt.plot(np.arange(1, len(batch_winrates) + 1, 1), batch_winrates, color='green')
+        plt.xlabel("Batch")
+        plt.ylabel("Win Rate")
+        plt.title("Win Rate vs Episode")
+
+        plt.show()
