@@ -7,21 +7,27 @@ from tqdm import tqdm
 
 from environment.env import EasyTwoPlayerEnv
 from agent.meta.wrapper import RL2Wrapper
-from agent.interface import AGENTS
+from agent.interface import AGENTS, agent_sample
 
 def makeInferEnv(n_episodes, opponent):
     return DummyVecEnv([lambda: RL2Wrapper(episodes_per_task=n_episodes, opponent=opponent, mode='inference')])
 
 def makeEasyEnv(opponent):
-    return EasyTwoPlayerEnv(opponent_agent=opponent)
+    if opponent in AGENTS:
+        return EasyTwoPlayerEnv(opponent_agent=AGENTS[opponent])
+    else:
+        return EasyTwoPlayerEnv(opponent_agent=agent_sample())
 
 def inference(model_path='models/2M', n_episodes=10000, agent='meta', opponent='baseline'):
     if agent == 'meta':
         env = makeInferEnv(n_episodes, opponent)
         model = RecurrentPPO.load(model_path, env=env)
     else:
-        env = makeEasyEnv(AGENTS[opponent])
-        model = AGENTS[agent]
+        env = makeEasyEnv(opponent)
+        if opponent in AGENTS:
+            model = AGENTS[agent]
+        else:
+            model = agent_sample()
 
     episode_rewards = []
     batch_winrates = []
@@ -147,14 +153,14 @@ def parse_args():
         "--agent",
         type=str,
         default="meta",
-        choices=["meta"] + list(AGENTS.keys()),
+        choices=["meta"] + list(AGENTS.keys()) + ["param"],
         help="Which agent to evaluate"
     )
     parser.add_argument(
         "--opponent",
         type=str,
         default="baseline",
-        choices=list(AGENTS.keys()),
+        choices=list(AGENTS.keys()) + ["param"],
         help="Which agent as the opponent"
     )
     parser.add_argument(

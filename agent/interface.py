@@ -3,6 +3,7 @@ from rlcard.agents import RandomAgent
 
 from agent.cfr.cfr import PPOAgent
 from agent.other.other import AlwaysFold, AlwaysCall
+from agent.other.parametric import ParametricAgent
 
 aggressive = PPOAgent(model_path="agent/cfr/models/aggressive", deterministic=True)
 passive    = PPOAgent(model_path="agent/cfr/models/passive", deterministic=True)
@@ -13,6 +14,15 @@ baseline   = PPOAgent(model_path="agent/cfr/models/baseline", deterministic=True
 rand       = RandomAgent(num_actions=4)
 fold       = AlwaysFold()
 call       = AlwaysCall()
+
+def agent_sample():
+    return ParametricAgent(
+        random.random(),
+        random.random(),
+        random.random(),
+        random.random(),
+        random.random(),
+    )
 
 AGENTS = {
     "aggressive": aggressive,
@@ -41,7 +51,10 @@ class OpponentSampler:
         self.mode = mode
 
         if mode == 'inference':
-            self.opponent = AGENTS[opponent]
+            if opponent in AGENTS:
+                self.opponent = AGENTS[opponent]
+            else:
+                self.opponent = agent_sample()
         else:
             self.opponent = None
 
