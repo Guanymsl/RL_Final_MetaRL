@@ -64,14 +64,10 @@ class RL2Wrapper(gym.Env):
 
         else:
             if terminated or truncated:
-
                 self.last_obs = self.env.reset()
                 self.just_reset = True
 
                 info = {"hand_done": True, **info}
-
-            else:
-                info = {"hand_done": False, **info}
 
             return aug_obs, reward, False, False, info
 

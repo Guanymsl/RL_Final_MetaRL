@@ -57,7 +57,7 @@ class HoldemTwoPlayerEnv(gym.Env):
 
     def step(self, action):
         if self.env.is_over():
-            return self.start_obs, self.env.get_payoffs()[0], True, False, {"win": True}
+            return self.start_obs, self.env.get_payoffs()[0], True, False, {}
 
         state = self.env.get_state(self.current_player)
         legal_actions = list(state["legal_actions"].keys())
