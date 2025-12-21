@@ -60,7 +60,7 @@ class HoldemTwoPlayerEnv(gym.Env):
     def step(self, action):
         if self.env.is_over():
             reward = self.env.get_payoffs()[0]
-            return self.start_obs, reward, True, False, {}
+            return self.start_obs, reward, True, False, {"win": True}
 
         state = self.env.get_state(self.current_player)
         legal_actions = list(state["legal_actions"].keys())
@@ -90,3 +90,57 @@ class HoldemTwoPlayerEnv(gym.Env):
             return obs, reward, True, False, {}
 
         return obs, reward, False, False, {}
+
+class EasyTwoPlayerEnv():
+    metadata = {"render.modes": []}
+
+    def __init__(self, opponent_agent, game_name="limit-holdem"):
+        self.env = rlcard.make(game_name, config={"allow_step_back": False})
+        if hasattr(self.env.game, "allowed_raise_num"):
+            self.env.game.allowed_raise_num = 2
+
+        self.opponent = opponent_agent
+        self.current_player = None
+
+    def _get_state(self, player):
+        state = self.env.get_state(player)
+        return state
+
+    def reset(self):
+        state, player = self.env.reset()
+        self.current_player = player
+
+        while self.current_player == 1 and not self.env.is_over():
+            state, self.current_player = self.env.step(
+                self.opponent.step(state)
+            )
+
+        self.start_state = self._get_state(self.current_player)
+        return self._get_state(self.current_player)
+
+    def step(self, action):
+        if self.env.is_over():
+            return self.start_state, self.env.get_payoffs()[0], True, {"win": True}
+
+        state = self.env.get_state(self.current_player)
+        legal_actions = list(state["legal_actions"].keys())
+        if action not in legal_actions:
+            action = int(np.random.choice(legal_actions))
+
+        state, next_player = self.env.step(action)
+        self.current_player = next_player
+
+        if self.env.is_over():
+            return state, self.env.get_payoffs()[0], True, {}
+
+        while self.current_player == 1 and not self.env.is_over():
+            state, self.current_player = self.env.step(
+                self.opponent.step(state)
+            )
+
+        state = self._get_state(self.current_player)
+
+        if self.env.is_over():
+            return state, self.env.get_payoffs()[0], True, {}
+
+        return state, 0.0, False, {}

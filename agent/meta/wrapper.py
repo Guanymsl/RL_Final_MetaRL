@@ -42,7 +42,7 @@ class RL2Wrapper(gym.Env):
     def step(self, action):
         if self.just_reset:
             self.just_reset = False
-            return self.augment(self.last_obs), 0.0, False, False, {}
+            return self.augment(self.last_obs), 0.0, False, False, {"just": True}
 
         obs, reward, terminated, truncated, info = self.env.step(action)
         aug_obs = self.augment(obs, reward)

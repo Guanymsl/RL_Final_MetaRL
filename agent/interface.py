@@ -14,13 +14,18 @@ rand       = RandomAgent(num_actions=4)
 fold       = AlwaysFold()
 call       = AlwaysCall()
 
-BASE_AGENTS = [
-    aggressive,
-    passive,
-    tight,
-    loose,
-    baseline,
-]
+AGENTS = {
+    "aggressive": aggressive,
+    "passive": passive,
+    "tight": tight,
+    "loose": loose,
+    "baseline": baseline,
+    "rand": rand,
+    "fold": fold,
+    "call": call,
+}
+
+OPPONENT = baseline
 
 def task_sample():
     r = random.random()
@@ -41,4 +46,4 @@ class OpponentSampler:
         if self.mode == 'train':
             return task_sample()
         else:
-            return baseline
+            return OPPONENT
