@@ -21,7 +21,7 @@ def inference(model_path='models/2M', n_episodes=10000, agent='agent'):
         model = RecurrentPPO.load(model_path, env=env)
     else:
         env = makeEasyEnv(OPPONENT)
-        model = AGENTS["passive"]
+        model = AGENTS[agent]
 
     episode_rewards = []
     batch_winrates = []
@@ -31,32 +31,16 @@ def inference(model_path='models/2M', n_episodes=10000, agent='agent'):
     batch_wins = 0
     batch_draws = 0
 
-    vpip = 0
-    call = 0
-    bet = 0
-
     if agent == 'agent':
         obs = env.reset()
-        for ep in tqdm(range(n_episodes), desc="Inference"):
+        for ep in tqdm(range(n_episodes), desc="Evaluation"):
             ep_reward = 0.0
             preflop = True
 
             while True:
                 action, _ = model.predict(obs, deterministic=True)
-                obs, reward, done, info = env.step(action)
+                obs, reward, _, info = env.step(action)
                 ep_reward += reward[0]
-
-                if not info[0].get("just", False) and not info[0].get("win", False):
-                    if preflop and not action == 2:
-                        vpip += 1
-                        call += 1
-                        bet += 1
-                        preflop = False
-                    elif not preflop:
-                        if action == 0:
-                            call += 1
-                        elif action == 1:
-                            bet += 1
 
                 if info[0].get("hand_done", False):
                     break
@@ -74,28 +58,48 @@ def inference(model_path='models/2M', n_episodes=10000, agent='agent'):
                 batch_wins = 0
                 batch_draws = 0
 
+        episode_rewards = np.array(episode_rewards)
+        batch_winrates = np.array(batch_winrates)
+
+        width = 25
+        print(
+            "\n" + "=" * width + "\n"
+            f"| {'Inference Summary':^{width-4}} |\n"
+            + "-" * width + "\n"
+            f"| {'Win Rate':<10}| {wins / n_episodes:<10.3f}|\n"
+            f"| {'Draw Rate':<10}| {draws / n_episodes:<10.3f}|\n"
+            f"| {'Mean Rwd':<10}| {episode_rewards.mean():<10.2f}|\n"
+            + "=" * width
+        )
+
     else:
-        for ep in tqdm(range(n_episodes), desc="Inference"):
+        vpip = 0
+        call = 0
+        bet = 0
+
+        for ep in tqdm(range(n_episodes), desc="Evaluation"):
             state = env.reset()
             ep_reward = 0.0
             preflop = True
 
             while True:
                 action = model.step(state)
+
+                legal_actions = list(state["legal_actions"].keys())
+                if action not in legal_actions:
+                    action = int(np.random.choice(legal_actions))
+
                 state, reward, done, info = env.step(action)
                 ep_reward += reward
 
                 if not info.get("win", False):
-                    if preflop and not action == 2:
-                        vpip += 1
+                    if action == 0:
                         call += 1
+                    if action == 1:
                         bet += 1
+                    if preflop and (action == 0 or action == 1):
+                        vpip += 1
                         preflop = False
-                    elif not preflop:
-                        if action == 0:
-                            call += 1
-                        elif action == 1:
-                            bet += 1
 
                 if done:
                     break
@@ -113,34 +117,34 @@ def inference(model_path='models/2M', n_episodes=10000, agent='agent'):
                 batch_wins = 0
                 batch_draws = 0
 
-    episode_rewards = np.array(episode_rewards)
-    batch_winrates = np.array(batch_winrates)
+        episode_rewards = np.array(episode_rewards)
+        batch_winrates = np.array(batch_winrates)
 
-    vpip = vpip / n_episodes
-    agg = bet / (bet + call)
+        vpip = vpip / n_episodes
+        agg = bet / (bet + call) if (bet + call) > 0 else 0.0
 
-    width = 25
-    print(
-        "\n" + "=" * width + "\n"
-        f"| {'Inference Summary':^{width-4}} |\n"
-        + "-" * width + "\n"
-        f"| {'Win Rate':<10}| {wins / n_episodes:<10.3f}|\n"
-        f"| {'Draw Rate':<10}| {draws / n_episodes:<10.3f}|\n"
-        f"| {'Mean Rwd':<10}| {episode_rewards.mean():<10.2f}|\n"
-        f"| {'VPIP':<10}| {vpip:<10.2f}|\n"
-        f"| {'Agg':<10}| {agg:<10.2f}|\n"
-        + "=" * width
-    )
+        width = 25
+        print(
+            "\n" + "=" * width + "\n"
+            f"| {'Inference Summary':^{width-4}} |\n"
+            + "-" * width + "\n"
+            f"| {'Win Rate':<10}| {wins / n_episodes:<10.3f}|\n"
+            f"| {'Draw Rate':<10}| {draws / n_episodes:<10.3f}|\n"
+            f"| {'Mean Rwd':<10}| {episode_rewards.mean():<10.2f}|\n"
+            f"| {'VPIP':<10}| {vpip:<10.2f}|\n"
+            f"| {'Agg':<10}| {agg:<10.2f}|\n"
+            + "=" * width
+        )
 
     return episode_rewards, batch_winrates
 
 if __name__ == "__main__":
     episode_rewards, batch_winrates = inference(
         n_episodes=100_000,
-        agent='agent',
+        agent='passive',
     )
 
-    episodes = np.arange(1, len(episode_rewards) + 1)
+    '''episodes = np.arange(1, len(episode_rewards) + 1)
 
     plt.figure(figsize=(6, 4))
     plt.plot(episodes, episode_rewards, color='orange')
@@ -154,4 +158,4 @@ if __name__ == "__main__":
     plt.ylabel("Win Rate")
     plt.title("Win Rate vs Episode")
 
-    plt.show()
+    plt.show()'''

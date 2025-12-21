@@ -28,7 +28,7 @@ class RL2Wrapper(gym.Env):
 
     def _reset_task(self):
         self.episode = 0
-        self.env = HoldemTwoPlayerEnv(opponent_agent=self.task.sample())
+        self.env = HoldemTwoPlayerEnv(opponent_agent=self.task.sample(), mode=self.mode)
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
