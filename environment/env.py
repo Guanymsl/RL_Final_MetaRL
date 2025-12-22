@@ -72,7 +72,7 @@ class HoldemTwoPlayerEnv(gym.Env):
 
         before = self.prev_chips
         self.prev_chips = float(state["raw_obs"]["all_chips"][0])
-        reward = 0.1 * (self.prev_chips - before)
+        reward = -0.25 * (self.prev_chips - before)
 
         while self.current_player == 1 and not self.env.is_over():
             state, self.current_player = self.env.step(self.opponent.step(state))

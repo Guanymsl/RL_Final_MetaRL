@@ -25,5 +25,18 @@ class ManualAgent:
             f"| {'History':<8}| {str(last_two_actions):<35} |\n"
             + "=" * width
         )
-        action = int(input("Choose action: "))
+        while True:
+            raw = input("Choose action: ")
+
+            try:
+                action = int(raw)
+            except ValueError:
+                print("Please enter an integer.")
+                continue
+
+            if action not in state["legal_actions"]:
+                print(f"Illegal action.")
+                continue
+
+            break
         return action
