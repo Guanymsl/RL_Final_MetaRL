@@ -81,7 +81,7 @@ if __name__ == "__main__":
     plt.text(0.67, 0.25, "Tight / Passive", ha="center")
 
     plt.xlabel("Tightness (1 - VPIP)")
-    plt.ylabel("Aggression (Agg)")
+    plt.ylabel("Aggressiveness (Agg)")
     plt.title("Style Quadrant")
 
     plt.xlim(0, 1)
