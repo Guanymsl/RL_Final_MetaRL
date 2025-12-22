@@ -43,6 +43,7 @@ AGENTS = {
 # continuous agent_sample()
 # mix: r < 0.15 agent_sample() | 0.15 < r < 0.9 aggressive passive tight loose | 0.9 < r baseline
 def task_sample():
+    # return agent_sample()
     r = random.random()
 
     if r < 0.15:
