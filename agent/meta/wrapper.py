@@ -40,16 +40,15 @@ class RL2Wrapper(gym.Env):
         return self.augment(obs), {}
 
     def step(self, action):
-        if self.just_reset:
-            self.just_reset = False
-            return self.augment(self.last_obs), 0.0, False, False, {"just": True}
-
-        obs, reward, terminated, truncated, info = self.env.step(action)
-        aug_obs = self.augment(obs, reward)
-
         if self.mode == 'train':
-            real_done = False
+            if self.just_reset:
+                self.just_reset = False
+                return self.augment(self.last_obs), 0.0, False, False, {"just": True}
 
+            obs, reward, terminated, truncated, info = self.env.step(action)
+            aug_obs = self.augment(obs, reward)
+
+            real_done = False
             if terminated or truncated:
                 self.episode += 1
                 info = {"hand_done": True, "reward": reward, **info}
@@ -63,10 +62,16 @@ class RL2Wrapper(gym.Env):
             return aug_obs, reward, real_done, False, info
 
         else:
-            if terminated or truncated:
+            if self.just_reset:
                 self.last_obs = self.env.reset()
-                self.just_reset = True
+                self.just_reset = False
+                return self.augment(self.last_obs), 0.0, False, False, {"just": True}
 
+            obs, reward, terminated, truncated, info = self.env.step(action)
+            aug_obs = self.augment(obs, reward)
+
+            if terminated or truncated:
+                self.just_reset = True
                 info = {"hand_done": True, **info}
 
             return aug_obs, reward, False, False, info

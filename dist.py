@@ -75,10 +75,10 @@ if __name__ == "__main__":
     plt.axvline(x_mid, linestyle="--", color='black')
     plt.axhline(y_mid, linestyle="--", color='black')
 
-    plt.text(0.75, 0.75, "Tight / Aggressive", ha="center")
-    plt.text(0.25, 0.75, "Loose / Aggressive", ha="center")
-    plt.text(0.25, 0.25, "Loose / Passive", ha="center")
-    plt.text(0.75, 0.25, "Tight / Passive", ha="center")
+    plt.text(0.67, 0.75, "Tight / Aggressive", ha="center")
+    plt.text(0.17, 0.75, "Loose / Aggressive", ha="center")
+    plt.text(0.17, 0.25, "Loose / Passive", ha="center")
+    plt.text(0.67, 0.25, "Tight / Passive", ha="center")
 
     plt.xlabel("Tightness (1 - VPIP)")
     plt.ylabel("Aggression (Agg)")

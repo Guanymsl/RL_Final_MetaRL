@@ -4,6 +4,7 @@ from rlcard.agents import RandomAgent
 from agent.cfr.cfr import PPOAgent
 from agent.other.other import AlwaysFold, AlwaysCall
 from agent.other.parametric import ParametricAgent
+from agent.other.human import ManualAgent
 
 aggressive = PPOAgent(model_path="agent/cfr/models/aggressive", deterministic=True)
 passive    = PPOAgent(model_path="agent/cfr/models/passive", deterministic=True)
@@ -14,6 +15,8 @@ baseline   = PPOAgent(model_path="agent/cfr/models/baseline", deterministic=True
 rand       = RandomAgent(num_actions=4)
 fold       = AlwaysFold()
 call       = AlwaysCall()
+
+human      = ManualAgent()
 
 def agent_sample():
     return ParametricAgent(
@@ -33,15 +36,19 @@ AGENTS = {
     "rand": rand,
     "fold": fold,
     "call": call,
+    "human": human,
 }
 
+# discrete: r < 0.15 fold call rand | 0.15 < r < 0.9 aggressive passive tight loose | 0.9 < r baseline
+# continuous agent_sample()
+# mix: r < 0.15 agent_sample() | 0.15 < r < 0.9 aggressive passive tight loose | 0.9 < r baseline
 def task_sample():
     r = random.random()
 
     if r < 0.15:
-        return random.choice([fold, call, rand])
+        return agent_sample()
 
-    if r < 0.90:
+    if r < 0.9:
         return random.choice([aggressive, passive, tight, loose])
 
     return baseline
