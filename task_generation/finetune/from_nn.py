@@ -14,7 +14,7 @@ from env.env import HoldemTwoPlayerEnv
 # Configuration
 # --------------------------------------------------
 BC_MODEL_PATH = "nn_models/base/cfr_bc_policy.pt"
-CHECKPOINT_DIR = "nn_models/base/base.zip"
+CHECKPOINT_DIR = "nn_models/base/"
 TOTAL_TIMESTEPS = 1000000
 WARMUP_STEPS = 20000
 CHECKPOINT_EVERY = 100000

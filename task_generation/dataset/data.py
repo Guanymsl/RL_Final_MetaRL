@@ -2,7 +2,7 @@ import numpy as np
 import pickle
 
 # Load CFR raw policy sums
-with open("../cfr_models/cfr_model_avg_pol.pkl", "rb") as f:
+with open("cfr_models/cfr_model_avg_pol.pkl", "rb") as f:
     avg_pol = pickle.load(f)
 
 obs_list = []

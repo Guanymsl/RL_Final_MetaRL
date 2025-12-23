@@ -10,7 +10,7 @@ TRAIN_EPOCHS = 30
 # Dataset Loader
 # ----------------------
 class CFRDataset(Dataset):
-    def __init__(self, path="../dataset/cfr_bc_dataset.npz"):
+    def __init__(self, path="nn_models/base/cfr_bc_dataset.npz"):
         data = np.load(path)
         self.obs = data["obs"]  # shape (N, obs_dim)
         self.probs = data["probs"]  # shape (N, action_dim)
@@ -71,7 +71,7 @@ class PokerPolicyNet(nn.Module):
 # ----------------------
 # Load dataset
 # ----------------------
-dataset = CFRDataset("../dataset/cfr_bc_dataset.npz")
+dataset = CFRDataset("nn_models/base/cfr_bc_dataset.npz")
 loader = DataLoader(dataset, batch_size=4096, shuffle=True, drop_last=True)
 
 obs_dim = dataset.obs.shape[1]

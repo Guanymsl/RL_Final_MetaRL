@@ -28,13 +28,58 @@ pip3 install -r requirements.txt
 ```
 
 ## Execution for Phase 1 - CFR
+All shell commands in this session should be run in the `task_generation` directory
 
 ### 1. Preprocess/Data Collection
-
+First run and save CFR with
+```bash
+python3 cfr/cfr.py
+```
+and
+```bash
+python3 dataset/data.py
+```
 ### 2. Training
+First train the neural network with
+```bash
+python3 base_nn/train.py
+```
+and
+```bash
+python3 finetune/from_nn.py
+```
+to prepare the base model
 
+Lastly, run
+```bash
+python3 finetune/from_ppo.py
+```
+
+with the following combinations of global variables 
+```python
+# first combination
+AGGRESSIVE=10.0
+TIGHT=0.0
+
+#second combination
+AGGRESSIVE=0.0
+TIGHT=10.0
+
+#third combination
+AGGRESSIVE=-10.0
+TIGHT=0.0
+
+#fourth combination
+AGGRESSIVE=0.0
+TIGHT=-10.0
+```
 ### 3. Evaluation
-
+(This step is optional)
+To evaluate the trained model, run
+```bash
+python3 bench.py --model1 <path_to_first_model> --model2 <path_to_second_model>
+```
+The models can be any `*.zip` or `*.pt` file in the `nn_models/` directory.
 ## Execution for Phase 2 - AutoEncoder
 
 ### 1. Preprocess/Data Collection

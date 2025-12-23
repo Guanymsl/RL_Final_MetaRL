@@ -9,14 +9,14 @@ from stable_baselines3 import PPO
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from env.env import HoldemTwoPlayerEnv
 
-BC_MODEL_PATH = "nn_models/base/base.zip"
+BC_MODEL_PATH = "nn_models/base/ppo_final.zip"
 TOTAL_TIMESTEPS = 1000000
 WARMUP_STEPS = 20000
 CHECKPOINT_EVERY = 100000
 
 AGGRESSIVE = -10.0
 TIGHT = 0.0
-CHECKPOINT_DIR = f"nn_models/checkpoints/a{AGGRESSIVE}t{TIGHT}"
+CHECKPOINT_DIR = f"nn_models/checkpoints/a{AGGRESSIVE}t{TIGHT}/"
 
 LEARNING_RATE = 1e-4
 

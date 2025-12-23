@@ -10,7 +10,7 @@ agent = CFRAgent(env)
 print(env.game.allowed_raise_num)
 print(env.state_shape)
 
-for i in range(30000):
+for i in range(2):
     agent.train()
     print("Iteration", i)
 
