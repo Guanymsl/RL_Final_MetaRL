@@ -83,10 +83,30 @@ The models can be any `*.zip` or `*.pt` file in the `nn_models/` directory.
 ## Execution for Phase 2 - AutoEncoder
 
 ### 1. Preprocess/Data Collection
+After executing all the scripts in phase 1, there should be a file named `cfr_bc_dataset.npz` in the `/task_generation/nn_models/base` directory.
+
+We will use this dataset generated in phase1 to train the AutoEncoder for phase 2.
 
 ### 2. Training
+Run the following command to return to the root directory of the repository.
+```bash
+cd ..
+```
+
+Execute the following script to train the AutoEncoder. 
+```bash
+python3 -m preprocess.autoencoder --mode train
+```
+When training is complete, a t-SNE visualization figure will be displayed to show the training results.
+
+The encoder's parameter will be automatically saved to `/preprocess/models/autoencoder.pt`
 
 ### 3. Evaluation
+You can execute the following command to evaluate the AutoEncoder.
+```bash
+python3 -m preprocess.autoencoder --mode evaluate
+```
+This will display a t-SNE visualization figure if the encoder parameters exists at `/preprocess/models/autoencoder.pt`
 
 ## Execution for Phase 3 - Meta-RL
 ### 1. Preprocess/Data Collection
