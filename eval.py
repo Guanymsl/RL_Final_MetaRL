@@ -366,6 +366,18 @@ def inference(model_path='models/discrete', n_episodes=100_000, agent='meta', op
 
     return episode_rewards, batch_winrates
 
+def is_banned(agent, opponent):
+    if agent in list(AGENTS.keys())[:7] and opponent == "human":
+        return True
+
+    if agent == "human" and opponent == "param":
+        return True
+
+    if agent == "human" and opponent == "human":
+        return True
+
+    return False
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Inference script for RL2 Hold'em agents"
@@ -400,6 +412,9 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
+
+    if is_banned(args.agent, args.opponent):
+        raise ValueError("Invalid agent-opponent combination")
 
     episode_rewards, batch_winrates = inference(
         n_episodes=100_000 if not args.fast else 10_000,
